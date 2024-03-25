@@ -1,0 +1,4 @@
+﻿  Bank.cpp
+C:\Users\kira0\Desktop\C++\Bank\Bank\Bank.cpp(46,43): warning C4244: return: преобразование "double" в "int", возможна потеря данных
+C:\Users\kira0\Desktop\C++\Bank\Bank\Bank.cpp(48): warning C4715: BankAccount::getInterest: значение возвращается не при всех путях выполнения
+  Bank.vcxproj -> C:\Users\kira0\Desktop\C++\Bank\x64\Debug\Bank.exe
