@@ -1,80 +1,146 @@
 ﻿#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+#include <Windows.h>
 #include <string>
-#include <algorithm>
-#include <random>
-#include <cctype>
-using namespace std;
+#include <limits>
 
-string reverse(string& inputStr) {
-    string reversed_word = inputStr;
-    reverse(reversed_word.begin(), reversed_word.end());
-    return reversed_word;
+class Organism {
+public:
+    virtual void eat() = 0;
+    virtual std::string getType() = 0;
+};
+
+class Predator : public Organism {
+public:
+    Predator(std::string type) : type(type) {}
+    void eat() {
+        std::cout << type << " съел " << target->getType() << std::endl;
+    }
+    std::string getType() {
+        return type;
+    }
+    void setTarget(Organism* t) {
+        target = t;
+    }
+private:
+    std::string type;
+    Organism* target;
+};
+
+class Herbivore : public Organism {
+public:
+    Herbivore(std::string type) : type(type) {}
+    void eat() {
+        std::cout << type << " съело " << target->getType() << std::endl;
+    }
+    std::string getType() {
+        return type;
+    }
+    void setTarget(Organism* t) {
+        target = t;
+    }
+private:
+    std::string type;
+    Organism* target;
+};
+
+class Plant : public Organism {
+public:
+    Plant(std::string type) : type(type) {}
+    void eat() {
+        std::cout << type << " было съедено" << std::endl;
+    }
+    std::string getType() {
+        return type;
+    }
+private:
+    std::string type;
+};
+
+std::vector<Organism*> organisms;
+std::vector<std::string> events; // Вектор для хранения истории событий
+
+void clearScreen() {
+    std::cout << "\033[2J\033[1;1H";
 }
 
-string removeVowels(string& inputStr) {
-    string res;
-    for (char c : inputStr) {
-        if (tolower(c) != 'a' && tolower(c) != 'e' && tolower(c) != 'i' &&
-            tolower(c) != 'o' && tolower(c) != 'u' && tolower(c) != 'y') {
-            res += c;
+void feed() {
+    clearScreen();
+    if (organisms.empty()) {
+        std::cout << "Все померли" << std::endl;
+        return;
+    }
+    int predatorIndex = rand() % organisms.size();
+    Predator* predator = dynamic_cast<Predator*>(organisms[predatorIndex]);
+    if (predator) {
+        int targetIndex;
+        do {
+            targetIndex = rand() % organisms.size();
+        } while (targetIndex == predatorIndex || dynamic_cast<Plant*>(organisms[targetIndex]) != nullptr || dynamic_cast<Predator*>(organisms[targetIndex]) != nullptr); // Проверка, что цель - не растение и не хищник
+        Organism* target = organisms[targetIndex];
+        predator->setTarget(target);
+        predator->eat();
+        organisms.erase(organisms.begin() + targetIndex);
+        events.push_back(predator->getType() + " съел " + target->getType());
+    }
+    else {
+        int herbivoreIndex = rand() % organisms.size();
+        Herbivore* herbivore = dynamic_cast<Herbivore*>(organisms[herbivoreIndex]);
+        if (herbivore) {
+            int targetIndex = rand() % organisms.size();
+            Plant* plant = dynamic_cast<Plant*>(organisms[targetIndex]);
+            if (plant) {
+                herbivore->setTarget(plant);
+                herbivore->eat();
+                organisms.erase(organisms.begin() + targetIndex);
+                events.push_back(herbivore->getType() + " съело " + plant->getType());
+            }
         }
     }
-    return res;
 }
-
-string removeConsonants(string& inputStr) {
-    string res;
-    for (char c : inputStr) {
-        if ((tolower(c) == 'a' || tolower(c) == 'e' || tolower(c) == 'i' ||
-            tolower(c) == 'o' || tolower(c) == 'u' || tolower(c) == 'y')) {
-            res += c;
-        }
-    }
-    return res;
-}
-
-   string shuffle(string& inputStr) {
-    string shuffled_word = inputStr;
-    random_device rd;
-    mt19937 gen(rd());
-    shuffle(shuffled_word.begin(), shuffled_word.end(), gen);
-    return shuffled_word;
-}
-
 
 int main() {
-    string inputStr;
-    cout << "Enter the requit text: ";
-    cin >> inputStr;
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    srand(time(0));
 
-    int numOperator;
-    cout << "Choose an action:\n"
-        << "1. Print the word in reverse.\n"
-        << "2. Print the word without vowels.\n"
-        << "3. Print the word without consonants.\n"
-        << "4. Shuffle the letters of the given word randomly.\n";
-    cin >> numOperator;
-    switch (numOperator)
-    {
-        case 1: {
-            cout << reverse(inputStr) << endl;
-            break;
+    int numPredators;
+    std::cout << "Введите количество хищников: ";
+    std::cin >> numPredators;
+    for (int i = 0; i < numPredators; ++i) {
+        std::string type;
+        std::cout << "Введите тип растения " << i + 1 << ": ";
+        std::cin >> type;
+        organisms.push_back(new Plant(type));
+    }
+
+    while (!organisms.empty()) {
+        std::cout << "Нажмите 1 для продолжения или 2 для кормления: ";
+        std::string input;
+        std::getline(std::cin, input);
+        if (input == "1") {
+            continue;
         }
-        case 2: {
-            cout << removeVowels(inputStr) << endl;
-            break;
+        else if (input == "2") {
+            feed();
         }
-        case 3: {
-            cout << removeConsonants(inputStr) << endl;
-            break;
-        }
-        case 4: {
-            cout << shuffle(inputStr) << endl;
-            break;
-        }
-        default: {
-            cout << "Incorrect input";
-            break;
+        else {
+            std::cout << "Неверный выбор!" << std::endl;
         }
     }
+
+    std::cout << "Описание процесса:" << std::endl;
+    for (const std::string& event : events) {
+        std::cout << event << std::endl;
+    }
+
+    // Очистка памяти
+    for (Organism* organism : organisms) {
+        delete organism;
+    }
+
+    return 0;
 }
+

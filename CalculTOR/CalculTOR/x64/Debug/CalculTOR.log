@@ -1,0 +1,3 @@
+﻿  CalculTOR.cpp
+C:\Users\kira0\Desktop\C++\CalculTOR\CalculTOR\CalculTOR.cpp(72,20): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+  CalculTOR.vcxproj -> C:\Users\kira0\Desktop\C++\CalculTOR\x64\Debug\CalculTOR.exe
